@@ -10,6 +10,12 @@ contract MockERC20 is ERC20 {
     function mint(address _to, uint256 _amount) external {
         _mint(_to, _amount);
     }
+
+    function transferFrom(address from, address to, uint256 amount) public override returns (bool) {
+        address spender = msg.sender;
+        _transfer(from, to, amount);
+        return true;
+    }
 }
 
 // We are using an external testing methodology
@@ -21,25 +27,32 @@ contract EchidnaTemplate {
     constructor() {
         token = new MockERC20("TOKEN", "tok");
         stakerContract = new Staker(address(token));
+        token.mint(address(this), type(uint128).max);
     }
 
     function stakeTest(uint256 _amount) public returns(uint256 stakedAmount){
         // Pre-condition
-        require(token.balanceOf(address(this)) >= _amount);
+        require(token.balanceOf(address(this)) > _amount);
 
         // action
         uint256 preStakeBalance = stakerContract.stakedBalances(address(this));
         _amount = 1 + (_amount % (token.balanceOf(address(this))));
-        stakerContract.stake(_amount);
-        stakedAmount = _amount;
+        
+        try stakerContract.stake(_amount) {
+            stakedAmount = _amount;
 
-        // Post-Condition
-        assert(stakerContract.stakedBalances(address(this)) == preStakeBalance + _amount);
+            // Post-Condition
+            assert(stakerContract.stakedBalances(address(this)) == preStakeBalance + _amount);
+        } 
+        catch {
+            assert(false);
+        }
+
     }
 
     function unstakeTest(uint256 _amount) public returns(uint256 unstakedAmount) {
         // Pre-Condition
-        require(stakerContract.stakedBalances(address(this)) >= _amount);
+        require(stakerContract.stakedBalances(address(this)) > _amount);
         
         // Action
         uint256 preTokenBalance = token.balanceOf(address(this));
