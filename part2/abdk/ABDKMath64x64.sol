@@ -117,7 +117,7 @@ library ABDKMath64x64 {
   function add (int128 x, int128 y) internal pure returns (int128) {
     unchecked {
       // bug: Introduced +1 here
-      int256 result = int256(x) + y + 1;
+      int256 result = int256(x) + y;
       require (result >= MIN_64x64 && result <= MAX_64x64);
       return int128 (result);
     }
