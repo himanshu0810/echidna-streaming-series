@@ -1,8 +1,8 @@
 pragma solidity ^0.6.0;
 
-import "../uni-v2/UniswapV2ERC20.sol";
 import "../uni-v2/UniswapV2Pair.sol";
 import "../uni-v2/UniswapV2Factory.sol";
+import "../uni-v2/UniswapV2ERC20.sol";
 
 contract User {
 
@@ -25,6 +25,11 @@ contract Setup {
         uniswapFactory = new UniswapV2Factory(address(user));
         pair = uniswapFactory.createPair(address(token0), address(token1));
         user = new User();
+
+        user.proxy(address(token0), abi.encodeWithSelector(token0.approve.selector, 
+            address(pair), uint(-1)));
+        user.proxy(address(token1), abi.encodeWithSelector(token1.approve.selector, 
+            address(pair), uint(-1)));
     }
 
     function _init(uint _amount0, uint _amount1) internal {

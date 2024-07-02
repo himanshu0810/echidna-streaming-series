@@ -1,4 +1,4 @@
 testMode: assertion
 testLimit: 10000
-testSequence: 25
-corpusDir: corpusTo
+seqLen: 25
+corpusDir: corpus
