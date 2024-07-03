@@ -1,39 +1,48 @@
 pragma solidity ^0.6.0;
 
 import "./Setup.sol";
+import "../libraries/UniswapV2Library.sol";
+import "../uni-v2/UniswapV2Router01.sol";
+
 
 contract EchidnaTest is Setup {
 
-    function testProvideLiquidity(uint _amount0, uint _amount1) public {
-        // Preprocessing
-        _amount0 = _between(_amount0, 1000, uint(-1));
-        _amount1 = _between(_amount1, 1000, uint(-1));
+    // Modify the test provide liquidity function using the periphery
+    function testProvideLiquidity(uint amount0, uint amount1) public {
+        // Preconditions:
+        amount0 = _between(amount0, 1000, uint(-1));
+        amount1 = _between(amount1, 1000, uint(-1));
 
-        if(!completed) {
-            _init(_amount0, _amount1);
+        if (!completed) {
+            _init(amount0, amount1);
         }
+        //// State before
+        uint lpTokenBalanceBefore = pair.balanceOf(address(user));
+        (uint reserve0Before, uint reserve1Before) = UniswapV2Library.getReserves(address(factory), address(testToken1), address(testToken2));
+        uint kBefore = reserve0Before * reserve1Before;
+        
+        // Action:
+        (bool success3,) = user.proxy(address(pair), abi.encodeWithSelector(
+            uniswapRouter.addLiquidity.selector, 
+            address(testToken1),
+            address(testToken2),
+            amount0,
+            amount1,
+            0, 0 , uint(-1)));
 
-        (uint reserveToken0, uint reserveToken1,) = pair.getReserves();
-        uint lpTokenBefore = pair.balanceOf(address(user));
-        uint kBefore = reserveToken0 * reserveToken1;
-
-        (bool success1, ) = user.proxy(address(token0), 
-                abi.encodeWithSelector(token0.transfer.selector, address(pair), amount0));
-        (bool success2, ) = user.proxy(address(token1), 
-                abi.encodeWithSelector(token1.transfer.selector, address(pair), amount2));
-        rrquire(success1 && success2);
-
-        // Actions
-        (bool success, ) = user.proxy(address(pair), 
-            abi.encodeWithSelector(bytes4(keccak256("mint(address)")), address(user)));
-
-        // PostProcessing
-        if (success) {
-            uint lpTokenAfter = pair.balanceof(user);
-            (uint reserveToken0, uint reserveToken1,) = pair.getReserves();
-            uint kAfter = reserveToken0 * reserveToken1;
-            assert(kBefore < KAfter);
-            assert(lpTokenBefore < lpTokenAfter);
+        // Postconditions:
+        if (success3) {
+            uint lpTokenBalanceAfter = pair.balanceOf(address(user));
+            (uint reserve0After, uint reserve1After) = UniswapV2Library.getReserves(address(factory), address(testToken1), address(testToken2));
+            uint kAfter = reserve0After * reserve1After;
+            assert(lpTokenBalanceBefore < lpTokenBalanceAfter);
+            assert(kBefore < kAfter);
         }
     }
+
+    // Test the remove liquidity function 
+
+
+    // test the swap functionality
+
 }

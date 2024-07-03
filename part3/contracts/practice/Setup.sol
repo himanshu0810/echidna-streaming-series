@@ -3,42 +3,45 @@ pragma solidity ^0.6.0;
 import "../uni-v2/UniswapV2Pair.sol";
 import "../uni-v2/UniswapV2Factory.sol";
 import "../uni-v2/UniswapV2ERC20.sol";
+import "../uni-v2/UniswapV2Router01.sol";
 
-contract User {
-
-    function proxy(address target, bytes memory data) public returns(bool success, bytes memory retdata) {
+contract Users {
+    function proxy(address target, bytes memory data) public returns (bool success, bytes memory retData) {
         return target.call(data);
     }
 }
 
 contract Setup {
-
-    UniswapV2ERC20 token0;
-    UniswapV2ERC20 token1;
+    UniswapV2Factory factory;
     UniswapV2Pair pair;
-    UniswapV2Factory uniswapFactory;
-    User user;
-
+    UniswapV2ERC20 testToken1;
+    UniswapV2ERC20 testToken2;
+    Users user;
+    bool completed;
+    UniswapV2Router01 uniswapRouter;
+    
     constructor() public {
-        token0 = new UniswapV2ERC20();
-        token1 = new UniswapV2ERC20();
-        uniswapFactory = new UniswapV2Factory(address(user));
-        pair = uniswapFactory.createPair(address(token0), address(token1));
-        user = new User();
+        testToken1 = new UniswapV2ERC20();
+        testToken2 = new UniswapV2ERC20();
+        factory = new UniswapV2Factory(address(this));
+        
+        uniswapRouter = new UniswapV2Router01(address(factory), address(0));
+        
+        pair = UniswapV2Pair(factory.createPair(address(testToken1), address(testToken2)));
+        user = new Users();
+        user.proxy(address(testToken1),abi.encodeWithSelector(testToken1.approve.selector, address(pair),uint(-1)));
+        user.proxy(address(testToken2), abi.encodeWithSelector(testToken2.approve.selector,address(pair),uint(-1)));
 
-        user.proxy(address(token0), abi.encodeWithSelector(token0.approve.selector, 
-            address(pair), uint(-1)));
-        user.proxy(address(token1), abi.encodeWithSelector(token1.approve.selector, 
-            address(pair), uint(-1)));
     }
 
-    function _init(uint _amount0, uint _amount1) internal {
-        token0.mint(address(user), _amount1);
-        token1.mint(address(user), _amount1);
+    function _init(uint amount1, uint amount2) internal {
+        testToken1.mint(address(user), amount1);
+        testToken2.mint(address(user), amount2);
         completed = true;
     }
 
-    function _between(uint value, uint low, uint high) {
-        return low + (value % (high - low) + 1);
+
+    function _between(uint val, uint low, uint high) internal pure returns(uint) {
+        return low + (val % (high-low +1)); 
     }
 }
