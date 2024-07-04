@@ -1,47 +1,77 @@
 pragma solidity ^0.6.0;
 
 import "../uni-v2/UniswapV2Pair.sol";
-import "../uni-v2/UniswapV2Factory.sol";
 import "../uni-v2/UniswapV2ERC20.sol";
+import "../uni-v2/UniswapV2Factory.sol";
+import "../libraries/UniswapV2Library.sol";
 import "../uni-v2/UniswapV2Router01.sol";
 
 contract Users {
-    function proxy(address target, bytes memory data) public returns (bool success, bytes memory retData) {
-        return target.call(data);
+    function proxy(address target, bytes memory _calldata)
+        public
+        returns (bool success, bytes memory returnData)
+    {
+        (success, returnData) = address(target).call(_calldata);
     }
 }
 
 contract Setup {
-    UniswapV2Factory factory;
-    UniswapV2Pair pair;
     UniswapV2ERC20 testToken1;
     UniswapV2ERC20 testToken2;
+    UniswapV2Pair pair;
+    UniswapV2Factory factory;
+    UniswapV2Router01 uniswapRouter;
     Users user;
     bool completed;
-    UniswapV2Router01 uniswapRouter;
-    
+
     constructor() public {
         testToken1 = new UniswapV2ERC20();
         testToken2 = new UniswapV2ERC20();
-        factory = new UniswapV2Factory(address(this));
+        factory = new UniswapV2Factory(address(this)); //this contract will be the fee setter
+        uniswapRouter = new UniswapV2Router01(address(factory), address(0)); // we don't need to test WETH pairs for now
+        pair = UniswapV2Pair(factory.createPair(
+            address(testToken1),
+            address(testToken2)
+        ));
         
-        uniswapRouter = new UniswapV2Router01(address(factory), address(0));
-        
-        pair = UniswapV2Pair(factory.createPair(address(testToken1), address(testToken2)));
         user = new Users();
-        user.proxy(address(testToken1),abi.encodeWithSelector(testToken1.approve.selector, address(pair),uint(-1)));
-        user.proxy(address(testToken2), abi.encodeWithSelector(testToken2.approve.selector,address(pair),uint(-1)));
-
+        // Sort the test tokens we just created, for clarity when writing invariant tests later
+        (address testTokenA, address testTokenB) = UniswapV2Library.sortTokens(address(testToken1), address(testToken2));
+        testToken1 = UniswapV2ERC20(testTokenA);
+        testToken2 = UniswapV2ERC20(testTokenB);
     }
 
-    function _init(uint amount1, uint amount2) internal {
-        testToken1.mint(address(user), amount1);
+    function _doApprovals() internal {
+        user.proxy(
+            address(testToken1),
+            abi.encodeWithSelector(
+                testToken1.approve.selector,
+                address(uniswapRouter),
+                uint256(-1)
+            )
+        );
+        user.proxy(
+            address(testToken2),
+            abi.encodeWithSelector(
+                testToken2.approve.selector,
+                address(uniswapRouter),
+                uint256(-1)
+            )
+        );
+    }
+
+    function _init(uint256 amount1, uint256 amount2) internal {
         testToken2.mint(address(user), amount2);
+        testToken1.mint(address(user), amount1);
+        _doApprovals();
         completed = true;
     }
 
-
-    function _between(uint val, uint low, uint high) internal pure returns(uint) {
-        return low + (val % (high-low +1)); 
+    function _between(
+        uint256 val,
+        uint256 lower,
+        uint256 upper
+    ) internal pure returns (uint256) {
+        return lower + (val % (upper - lower + 1));
     }
 }
