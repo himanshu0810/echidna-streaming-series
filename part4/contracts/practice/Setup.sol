@@ -42,22 +42,22 @@ contract Setup {
     }
 
     function _doApprovals() internal {
-        // user.proxy(
-        //     address(testToken1),
-        //     abi.encodeWithSelector(
-        //         testToken1.approve.selector,
-        //         address(uniswapRouter),
-        //         uint256(-1)
-        //     )
-        // );
-        // user.proxy(
-        //     address(testToken2),
-        //     abi.encodeWithSelector(
-        //         testToken2.approve.selector,
-        //         address(uniswapRouter),
-        //         uint256(-1)
-        //     )
-        // );
+        user.proxy(
+            address(testToken1),
+            abi.encodeWithSelector(
+                testToken1.approve.selector,
+                address(uniswapRouter),
+                uint256(-1)
+            )
+        );
+        user.proxy(
+            address(testToken2),
+            abi.encodeWithSelector(
+                testToken2.approve.selector,
+                address(uniswapRouter),
+                uint256(-1)
+            )
+        );
     }
 
     function _init(uint256 amount1, uint256 amount2) internal {

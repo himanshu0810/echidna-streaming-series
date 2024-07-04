@@ -22,12 +22,18 @@ contract EchidnaTest is Setup {
         UniswapV2Library.getReserves(address(factory), address(testToken1), address(testToken2));
 
         uint kBefore = reserve0Before * reserve1Before;
-
+ 
+        (bool success, ) = user.proxy(address(uniswapRouter), abi.encodeWithSelector(uniswapRouter.addLiquidity.selector, address(testToken1), address(testToken2), amount0, amount1, 0, 0, address(user), uint(-1)));
         
-        try user.proxy(address(uniswapRouter), abi.encodeWithSelector(uniswapRouter.addLiquidity.selector, address(testToken1), address(testToken2), amount0, amount1, 0, 0, address(user), uint(-1)))
-        {}
-        catch { assert(false); }
+        if (success) {
+            uint lpTokenBalanceAfter = pair.balanceOf(address(user));
+            (uint reserve0After, uint reserve1After) =
+            UniswapV2Library.getReserves(address(factory), address(testToken1), address(testToken2));
 
+            uint kAfter = reserve0After * reserve1After;
 
+            assert(lpTokenBalanceBefore < lpTokenBalanceAfter);
+            assert(kBefore < kAfter);
+        }
     }
 }
