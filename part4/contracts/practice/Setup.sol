@@ -18,22 +18,22 @@ contract Users {
 contract Setup {
     UniswapV2ERC20 testToken1;
     UniswapV2ERC20 testToken2;
-    UniswapV2Pair testPair;
+    UniswapV2Pair pair;
     UniswapV2Factory factory;
-    UniswapV2Router01 router;
+    UniswapV2Router01 uniswapRouter;
     Users user;
-    bool complete;
+    bool completed;
 
     constructor() public {
         testToken1 = new UniswapV2ERC20();
         testToken2 = new UniswapV2ERC20();
         factory = new UniswapV2Factory(address(this)); //this contract will be the fee setter
-        router = new UniswapV2Router01(address(factory), address(0)); // we don't need to test WETH pairs for now
-        address pair = factory.createPair(
+        uniswapRouter = new UniswapV2Router01(address(factory), address(0)); // we don't need to test WETH pairs for now
+        pair = UniswapV2Pair(factory.createPair(
             address(testToken1),
             address(testToken2)
-        );
-        testPair = UniswapV2Pair(pair);
+        ));
+        
         user = new Users();
         // Sort the test tokens we just created, for clarity when writing invariant tests later
         (address testTokenA, address testTokenB) = UniswapV2Library.sortTokens(address(testToken1), address(testToken2));
@@ -42,29 +42,29 @@ contract Setup {
     }
 
     function _doApprovals() internal {
-        user.proxy(
-            address(testToken1),
-            abi.encodeWithSelector(
-                testToken1.approve.selector,
-                address(router),
-                uint256(-1)
-            )
-        );
-        user.proxy(
-            address(testToken2),
-            abi.encodeWithSelector(
-                testToken2.approve.selector,
-                address(router),
-                uint256(-1)
-            )
-        );
+        // user.proxy(
+        //     address(testToken1),
+        //     abi.encodeWithSelector(
+        //         testToken1.approve.selector,
+        //         address(uniswapRouter),
+        //         uint256(-1)
+        //     )
+        // );
+        // user.proxy(
+        //     address(testToken2),
+        //     abi.encodeWithSelector(
+        //         testToken2.approve.selector,
+        //         address(uniswapRouter),
+        //         uint256(-1)
+        //     )
+        // );
     }
 
     function _init(uint256 amount1, uint256 amount2) internal {
         testToken2.mint(address(user), amount2);
         testToken1.mint(address(user), amount1);
         _doApprovals();
-        complete = true;
+        completed = true;
     }
 
     function _between(
