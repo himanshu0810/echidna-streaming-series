@@ -36,4 +36,34 @@ contract EchidnaTest is Setup {
             assert(kBefore < kAfter);
         }
     }
+
+    function testRemoveLiquidity(uint liquidityToRemove) public {
+
+        uint lpTokenBalance = pair.balanceOf(address(user));
+        (uint reserve0Before, uint reserve1Before) = 
+        UniswapV2Library.getReserves(address(factory), address(testToken1), address(testToken2));
+
+        uint kBefore = reserve0Before * reserve1Before;
+
+        liquidityToRemove = _between(liquidityToRemove, 0, lpTokenBalance);
+
+        (bool success, ) = 
+        user.proxy(address(uniswapRouter), abi.encodeWithSelector(
+            uniswapRouter.removeLiquidity.selector, 
+            address(testToken1), 
+            address(testToken2),
+            liquidityToRemove,
+            0, 0, address(user), uint(-1)));
+
+        if (success) {
+            uint lpTokenAfter = pair.balanceOf(address(user));
+            (uint reserve0After, uint reserve1After) = 
+            UniswapV2Library.getReserves(address(factory), address(testToken1), address(testToken2));
+
+            uint kAfter = reserve0After * reserve1After;
+            assert(lpTokenAfter <= lpTokenBalance);
+            assert(kAfter <= kBefore);
+        }    
+    }
+
 }
