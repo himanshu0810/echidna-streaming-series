@@ -38,14 +38,20 @@ contract EchidnaTest is Setup {
     }
 
     function testRemoveLiquidity(uint liquidityToRemove) public {
-
+        
         uint lpTokenBalance = pair.balanceOf(address(user));
+
+        require(lpTokenBalance > 0 , "not enough liquidity");
+
         (uint reserve0Before, uint reserve1Before) = 
         UniswapV2Library.getReserves(address(factory), address(testToken1), address(testToken2));
 
         uint kBefore = reserve0Before * reserve1Before;
 
-        liquidityToRemove = _between(liquidityToRemove, 0, lpTokenBalance);
+        liquidityToRemove = _between(liquidityToRemove, 1, lpTokenBalance);
+
+        (bool success1,) = user.proxy(address(pair),abi.encodeWithSelector(pair.approve.selector,address(uniswapRouter),uint(-1)));
+        require(success1);
 
         (bool success, ) = 
         user.proxy(address(uniswapRouter), abi.encodeWithSelector(

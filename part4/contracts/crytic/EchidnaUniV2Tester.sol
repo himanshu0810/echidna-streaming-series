@@ -1,7 +1,7 @@
 pragma solidity ^0.6.0;
-import "./Setup.sol";
+import "./Setup1.sol";
 
-contract EchidnaUniV2Tester is Setup {
+contract EchidnaUniV2Tester is Setup1 {
     using SafeMath for uint;
     event logUints(uint kBefore, uint kAfter);
     function testProvideLiquidityInvariants(uint amount1, uint amount2) public {
