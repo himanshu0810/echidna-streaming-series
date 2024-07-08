@@ -1,0 +1,4 @@
+testMode: assertion
+testLimit: 10000
+seqLen: 25
+corpusDir: corpus

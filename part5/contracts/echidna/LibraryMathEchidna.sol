@@ -29,8 +29,8 @@ contract LibraryMathEchidna {
 		preAllocateReserves= reserve; 
 
 		//************************* Action *************************/
-		uint256 liquidity0 = (delRisky * reserve.liquidity) / uint256(reserve.reserveRisky); // calculate the spot price on the risky token
-        	uint256 liquidity1 = (delStable * reserve.liquidity) / uint256(reserve.reserveStable); // calculate the spot price on the stable token
+		liquidity0 = (delRisky * reserve.liquidity) / uint256(reserve.reserveRisky); // calculate the spot price on the risky token
+        	liquidity1 = (delStable * reserve.liquidity) / uint256(reserve.reserveStable); // calculate the spot price on the stable token
         	delLiquidity = liquidity0 < liquidity1 ? liquidity0 : liquidity1; //choose min(risky spot, stable spot) for liquidity change
 		
 		Reserve.allocate(reserve,delRisky,delStable,delLiquidity,uint32(block.timestamp + 1000)); // allocate to the reserve

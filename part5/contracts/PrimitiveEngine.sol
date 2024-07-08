@@ -244,12 +244,15 @@ contract PrimitiveEngine is IPrimitiveEngine {
         bytes calldata data // calldata to be used on the allocate (optional)
     ) external override lock returns (uint256 delLiquidity) {
         if (delRisky == 0 || delStable == 0) revert ZeroDeltasError(); //@note INVARIANT: delRisky, delStable need to be >0 
-        Reserve.Data storage reserve = reserves[poolId]; // retrieve reserves for a specific pool 
+        Reserve.Data storage reserve = reserves[poolId]; // retrieve reserves for a specific pool
+
         if (reserve.blockTimestamp == 0) revert UninitializedError(); //@note INVARIANT E2E: A pool must exist ("create()")before you can allocate to it 
         uint32 timestamp = _blockTimestamp(); 
 
         uint256 liquidity0 = (delRisky * reserve.liquidity) / uint256(reserve.reserveRisky); // calculate the risky token spot price 
         uint256 liquidity1 = (delStable * reserve.liquidity) / uint256(reserve.reserveStable); // calculate the stable token spot price
+
+
         delLiquidity = liquidity0 < liquidity1 ? liquidity0 : liquidity1; // min(risky,stable)
         if (delLiquidity == 0) revert ZeroLiquidityError(); // @note INVARIANT: delta liquidity needs to be >0.
 
