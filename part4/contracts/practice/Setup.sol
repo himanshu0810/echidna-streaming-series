@@ -7,9 +7,8 @@ import "../libraries/UniswapV2Library.sol";
 import "../uni-v2/UniswapV2Router01.sol";
 
 contract Users {
-    function proxy(address target, bytes memory _calldata)
-        public
-        returns (bool success, bytes memory returnData)
+    function proxy(address target, bytes memory _calldata) 
+        public returns (bool success, bytes memory returnData)
     {
         (success, returnData) = address(target).call(_calldata);
     }
